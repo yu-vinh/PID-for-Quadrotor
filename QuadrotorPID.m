@@ -93,32 +93,32 @@ function dX = f(t, X)
     t_prev = t;
 
     % Reference Trajectory
-    xd_t = 0.5 * cos(pi * t / 5);
-    yd_t = 0.5 * sin(pi * t / 5);
-    zd_t = 1 - 0.5 * cos(pi * t / 5);
-    ref = [xd_t; yd_t; zd_t];
+    xd = 0.5*cos(pi*t/5);
+    yd = 0.5*sin(pi*t/5);
+    zd = 1 - 0.5*cos(pi*t/5);
+    ref = [xd; yd; zd];
     psi_d = 0;
 
     % State Unpacking
-    pos   = X(1:3);
-    vel   = X(4:6);
-    ang   = X(7:9);
+    pos = X(1:3);
+    vel = X(4:6);
+    ang = X(7:9);
     rates = X(10:12);
 
-    phi       = ang(1);
-    theta     = ang(2);
-    psi       = ang(3);
-    phi_dot   = rates(1);
+    phi = ang(1);
+    theta = ang(2);
+    psi = ang(3);
+    phi_dot = rates(1);
     theta_dot = rates(2);
-    psi_dot   = rates(3);
+    psi_dot = rates(3);
 
     % External Disturbances
-    dx     = 0.3 * sin(t);
-    dy     = 0.3 * sin(t);
-    dz     = 0.1 * cos(0.5 * t);
-    dphi   = 0.2 * sin(2 * t);
-    dtheta = 0.2 * sin(2 * t);
-    dpsi   = 0.1 * sin(t);
+    dx = 0.3*sin(t);
+    dy = 0.3*sin(t);
+    dz = 0.1*cos(0.5*t);
+    dphi = 0.2*sin(2*t);
+    dtheta = 0.2*sin(2*t);
+    dpsi = 0.1*sin(t);
 
     % PID Controller Parameters
     Kp_p = [6; 6; 7];
@@ -137,7 +137,7 @@ function dX = f(t, X)
     int_p = int_p + e_p * dt;
     int_p = sat(int_p, 2);
 
-    u = Kp_p .* e_p + Kd_p .* e_v + Ki_p .* int_p;
+    u = Kp_p.*e_p + Kd_p.*e_v + Ki_p.*int_p;
     ux = u(1); uy = u(2); uz = u(3);
 
     % Thrust and Target Roll/Pitch
@@ -152,15 +152,15 @@ function dX = f(t, X)
 %% =========================================================================
 %% Inner Loop: Attitude Control
 %% =========================================================================    
-    e_a    = ang_ref - ang;
+    e_a = ang_ref - ang;
     e_rate = -rates;
-    int_a  = int_a + e_a * dt;
-    int_a  = sat(int_a, 1);
+    int_a = int_a + e_a * dt;
+    int_a = sat(int_a, 1);
 
-    tau       = Kp_a .* e_a + Kd_a .* e_rate + Ki_a .* int_a;
-    tau_phi   = tau(1);
+    tau = Kp_a .* e_a + Kd_a .* e_rate + Ki_a .* int_a;
+    tau_phi = tau(1);
     tau_theta = tau(2);
-    tau_psi   = tau(3);
+    tau_psi = tau(3);
 
     % Equations of Motion
     R = rotmat(phi, theta, psi);
@@ -180,18 +180,18 @@ function dX = f(t, X)
     w_alpha = w1 - w2 + w3 - w4;
 
     % Angular Accelerations
-    phi_dot2   = (tau_phi + (Iyy - Izz)*theta_dot*psi_dot + Ir*w_alpha*theta_dot + dphi)/Ixx;
+    phi_dot2 = (tau_phi + (Iyy - Izz)*theta_dot*psi_dot + Ir*w_alpha*theta_dot + dphi)/Ixx;
     theta_dot2 = (tau_theta + (Izz - Ixx)*phi_dot*psi_dot - Ir*w_alpha*phi_dot + dtheta)/Iyy;
-    psi_dot2   = (tau_psi + (Ixx - Iyy)*phi_dot*theta_dot + dpsi)/Izz;
+    psi_dot2 = (tau_psi + (Ixx - Iyy)*phi_dot*theta_dot + dpsi)/Izz;
 
     % Derivatives Vector Output
     dX = zeros(12,1);
-    dX(1:3)  = vel;
-    dX(4:6)  = acc;
-    dX(7:9)  = rates;
-    dX(10)   = phi_dot2;
-    dX(11)   = theta_dot2;
-    dX(12)   = psi_dot2;
+    dX(1:3) = vel;
+    dX(4:6) = acc;
+    dX(7:9) = rates;
+    dX(10) = phi_dot2;
+    dX(11) = theta_dot2;
+    dX(12) = psi_dot2;
 end
 
 %% =========================================================================
