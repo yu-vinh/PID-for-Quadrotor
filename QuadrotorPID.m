@@ -1,23 +1,27 @@
 %% =========================================================================
-%% 1. PARAMETER INITIALIZATION
+%% 3D Trajectory Control Simulation for Quadrotor (COMPLETED VERSION)
 %% =========================================================================
 function QuadrotorPID()
+%% =========================================================================
+%% 1. PARAMETER INITIALIZATION
+%% =========================================================================
+clearvars; clc; close all;
 % Physical parameters
-m   = 1.121;         % Quadrotor mass (kg)
-g   = 9.81;          % Gravity acceleration (m/s^2)
+m = 1.121;         % Quadrotor mass (kg)
+g = 9.81;          % Gravity acceleration (m/s^2)
 
 Ixx = 0.01;          % Moments of inertia (kg*m^2)
 Iyy = 0.01;
 Izz = 0.0148;
-Ir  = 2.83e-5;       % Rotor moment of inertia
+Ir = 2.83e-5;       % Rotor moment of inertia
 
-k   = 2.98e-5;       % Lift constant
-b   = 3.23e-7;       % Drag constant
-l   = 0.25;          % Arm length (m)
+k = 2.98e-5;       % Lift constant
+b = 3.23e-7;       % Drag constant
+l = 0.25;          % Arm length (m)
 
-Ax  = 5.56e-4;       % Drag coefficients
-Ay  = 5.56e-4;
-Az  = 6.35e-4;
+Ax = 5.56e-4;       % Drag coefficients
+Ay = 5.56e-4;
+Az = 6.35e-4;
 
 %% =========================================================================
 %% 2. INITIAL CONDITIONS & SIMULATION TIMING
@@ -39,8 +43,13 @@ opts = odeset('RelTol', 1e-3, 'AbsTol', 1e-5, 'MaxStep', 0.02);
 [t, X] = ode45(@f, [t0 Tf], x0, opts);
 
 % Extract states
-x = X(:,1);   y = X(:,2);   z = X(:,3);
-phi = X(:,7); theta = X(:,8); psi = X(:,9);
+x = X(:,1);
+y = X(:,2);
+z = X(:,3);
+
+phi = X(:,7);
+theta = X(:,8);
+psi = X(:,9);
 
 %% =========================================================================
 %% 4. REFERENCE TRAJECTORY GENERATION FOR PLOTTING
@@ -57,18 +66,18 @@ plot3(x, y, z, 'b', 'LineWidth', 2); hold on;
 plot3(xd, yd, zd, 'r--', 'LineWidth', 2);
 grid on;
 xlabel('x (m)'); ylabel('y (m)'); zlabel('z (m)');
-legend('Actual', 'Reference');
+legend('Actual', 'Desired');
 title('3D Trajectory Tracking');
 axis equal; view(45, 30);
 
 figure(2);
 subplot(3,1,1); plot(t, x, 'b', t, xd, 'r--', 'LineWidth', 1.5); grid on;
-ylabel('x (m)'); legend('actual','desired')
+ylabel('x (m)'); legend('Actual','Desired')
 title('Position Tracking');
 subplot(3,1,2); plot(t, y, 'b', t, yd, 'r--', 'LineWidth', 1.5); grid on;
-ylabel('y (m)'); legend('actual','desired')
+ylabel('y (m)'); legend('Actual','Desired')
 subplot(3,1,3); plot(t, z, 'b', t, zd, 'r--', 'LineWidth', 1.5); grid on;
-ylabel('z (m)'); xlabel('Time (s)');  legend('actual','desired')
+ylabel('z (m)'); xlabel('Time (s)');  legend('Actual','Desired')
 
 figure(3);
 subplot(3,1,1); plot(t, rad2deg(phi), 'LineWidth', 1.5);
@@ -81,7 +90,7 @@ title('Yaw (\psi)'); grid on; ylabel('deg'); xlabel('Time (s)');
 %% =========================================================================
 %% CONTROL FUNCTION
 %% =========================================================================
-function dX = f(t, X)
+function deq = f(t, X)
     persistent int_p int_a t_prev
     if isempty(int_p)
         int_p = zeros(3,1);
@@ -99,18 +108,16 @@ function dX = f(t, X)
     ref = [xd; yd; zd];
     psi_d = 0;
 
-    % State Unpacking
-    pos = X(1:3);
-    vel = X(4:6);
-    ang = X(7:9);
-    rates = X(10:12);
+    x = X(1); y = X(2); z = X(3);
+    x_dot = X(4); y_dot = X(5); z_dot = X(6);
 
-    phi = ang(1);
-    theta = ang(2);
-    psi = ang(3);
-    phi_dot = rates(1);
-    theta_dot = rates(2);
-    psi_dot = rates(3);
+    phi = X(7); theta = X(8); psi = X(9);
+    phi_dot = X(10); theta_dot = X(11); psi_dot = X(12);
+    
+    pos = [x y z]';
+    v = [x_dot y_dot z_dot]';
+    att = [phi theta psi]';
+    att_v = [phi_dot theta_dot psi_dot]';
 
     % External Disturbances
     dx = 0.3*sin(t);
@@ -120,7 +127,9 @@ function dX = f(t, X)
     dtheta = 0.2*sin(2*t);
     dpsi = 0.1*sin(t);
 
-    % PID Controller Parameters
+%% =========================================================================
+%% Parameters of PID for Positions Controller and Attitudes Controller
+%% =========================================================================
     Kp_p = [6; 6; 7];
     Ki_p = [0.05; 0.05; 0.20];
     Kd_p = [4; 4; 7];
@@ -133,43 +142,34 @@ function dX = f(t, X)
 %% Outer Loop: Position Control
 %% =========================================================================
     e_p = ref - pos;
-    e_v = -vel; 
+    e_v = -v; 
     int_p = int_p + e_p * dt;
     int_p = sat(int_p, 2);
 
     u = Kp_p.*e_p + Kd_p.*e_v + Ki_p.*int_p;
     ux = u(1); uy = u(2); uz = u(3);
 
-    % Thrust and Target Roll/Pitch
+    % Thrust and Desired Roll/Pitch
     T = m * sqrt(ux^2 + uy^2 + (uz + g)^2); 
     
     phi_d   = asin((ux*sin(psi_d) - uy*cos(psi_d)) / sqrt(ux^2 + uy^2 + (uz + g)^2));
 
     theta_d = atan((ux*cos(psi_d) + uy*sin(psi_d)) / (uz + g));
 
-    ang_ref = [phi_d; theta_d; psi_d];
+    att_ref = [phi_d theta_d psi_d]';
 
 %% =========================================================================
 %% Inner Loop: Attitude Control
 %% =========================================================================    
-    e_a = ang_ref - ang;
-    e_rate = -rates;
+    e_a = att_ref - att;
+    e_attv = -att_v;
     int_a = int_a + e_a * dt;
     int_a = sat(int_a, 1);
 
-    tau = Kp_a .* e_a + Kd_a .* e_rate + Ki_a .* int_a;
+    tau = Kp_a .* e_a + Kd_a .* e_attv + Ki_a .* int_a;
     tau_phi = tau(1);
     tau_theta = tau(2);
     tau_psi = tau(3);
-
-    % Equations of Motion
-    R = rotmat(phi, theta, psi);
-    TB = [0; 0; T];
-    G  = [0; 0; -m * g];
-    FD = [Ax * vel(1); Ay * vel(2); Az * vel(3)];
-    d_pos = [dx; dy; dz];
-
-    acc = (R * TB + G - FD + d_pos) / m;
 
     % Motor speeds
     w1 = sqrt(max(0,T/(4*k) - tau_theta/(2*k*l) - tau_psi/(4*b)));
@@ -179,36 +179,43 @@ function dX = f(t, X)
 
     w_alpha = w1 - w2 + w3 - w4;
 
-    % Angular Accelerations
+    % % Derivative equations of attitudes
     phi_dot2 = (tau_phi + (Iyy - Izz)*theta_dot*psi_dot + Ir*w_alpha*theta_dot + dphi)/Ixx;
+
     theta_dot2 = (tau_theta + (Izz - Ixx)*phi_dot*psi_dot - Ir*w_alpha*phi_dot + dtheta)/Iyy;
+
     psi_dot2 = (tau_psi + (Ixx - Iyy)*phi_dot*theta_dot + dpsi)/Izz;
 
+    % % Derivative equations of positions
+    x_dot2 = (T/m)*( cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi)) - (Ax/m)*x_dot + dx;
+
+    y_dot2 = (T/m)*( cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi)) - (Ay/m)*y_dot + dy;
+
+    z_dot2 = (T/m)*cos(phi)*cos(theta) - g - (Az/m)*z_dot + dz;
+
     % Derivatives Vector Output
-    dX = zeros(12,1);
-    dX(1:3) = vel;
-    dX(4:6) = acc;
-    dX(7:9) = rates;
-    dX(10) = phi_dot2;
-    dX(11) = theta_dot2;
-    dX(12) = psi_dot2;
+    deq = zeros(12,1);
+    deq(1) = x_dot;
+    deq(2) = y_dot;
+    deq(3) = z_dot;
+
+    deq(4) = x_dot2;
+    deq(5) = y_dot2;
+    deq(6) = z_dot2;
+
+    deq(7) = phi_dot;
+    deq(8) = theta_dot;
+    deq(9) = psi_dot;
+
+    deq(10) = phi_dot2;
+    deq(11) = theta_dot2;
+    deq(12) = psi_dot2;
 end
 
 %% =========================================================================
 %% HELPER FUNCTION
 %% =========================================================================
-function R = rotmat(phi, theta, psi)
-    cphi = cos(phi);     sphi = sin(phi);
-    ctheta = cos(theta); stheta = sin(theta);
-    cpsi = cos(psi);     spsi = sin(psi);
-
-    R = [ctheta*cpsi,  sphi*stheta*cpsi - cphi*spsi,  cphi*stheta*cpsi + sphi*spsi;
-         ctheta*spsi,  sphi*stheta*spsi + cphi*cpsi,  cphi*stheta*spsi - sphi*cpsi;
-         -stheta,      sphi*ctheta,                   cphi*ctheta];
-end
-
 function y = sat(u, lim)
     y = min(max(u, -lim), lim);
 end
-
 end
