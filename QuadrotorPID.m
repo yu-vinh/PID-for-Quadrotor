@@ -130,12 +130,12 @@ function deq = f(t, X)
 %% =========================================================================
 %% Parameters of PID for Positions Controller and Attitudes Controller
 %% =========================================================================
-    Kp_p = [6; 6; 7];
-    Ki_p = [0.05; 0.05; 0.20];
-    Kd_p = [4; 4; 7];
+    Kp_p = [6; 6; 8];
+    Ki_p = [1; 1; 1];
+    Kd_p = [8; 8; 5];
 
-    Kp_a = [12; 12; 6];
-    Ki_a = [0.02; 0.02; 0.01];
+    Kp_a = [10; 10; 4];
+    Ki_a = [2; 2; 3];
     Kd_a = [4; 4; 2];
 
 %% =========================================================================
@@ -144,7 +144,6 @@ function deq = f(t, X)
     e_p = ref - pos;
     e_v = -v; 
     int_p = int_p + e_p * dt;
-    int_p = sat(int_p, 2);
 
     u = Kp_p.*e_p + Kd_p.*e_v + Ki_p.*int_p;
     ux = u(1); uy = u(2); uz = u(3);
@@ -164,7 +163,6 @@ function deq = f(t, X)
     e_a = att_ref - att;
     e_attv = -att_v;
     int_a = int_a + e_a * dt;
-    int_a = sat(int_a, 1);
 
     tau = Kp_a .* e_a + Kd_a .* e_attv + Ki_a .* int_a;
     tau_phi = tau(1);
@@ -215,7 +213,7 @@ end
 %% =========================================================================
 %% HELPER FUNCTION
 %% =========================================================================
-function y = sat(u, lim)
-    y = min(max(u, -lim), lim);
+function y = sat(u, a, b)
+    y = min(max(u, a), b);
 end
 end
