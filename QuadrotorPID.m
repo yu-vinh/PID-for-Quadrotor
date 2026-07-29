@@ -177,14 +177,14 @@ function deq = f(t, X)
 
     w_alpha = w1 - w2 + w3 - w4;
 
-    % % Derivative equations of attitudes
+    %% Derivative equations of attitudes
     phi_dot2 = (tau_phi + (Iyy - Izz)*theta_dot*psi_dot + Ir*w_alpha*theta_dot + dphi)/Ixx;
 
     theta_dot2 = (tau_theta + (Izz - Ixx)*phi_dot*psi_dot - Ir*w_alpha*phi_dot + dtheta)/Iyy;
 
     psi_dot2 = (tau_psi + (Ixx - Iyy)*phi_dot*theta_dot + dpsi)/Izz;
 
-    % % Derivative equations of positions
+    %% Derivative equations of positions
     x_dot2 = (T/m)*( cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi)) - (Ax/m)*x_dot + dx;
 
     y_dot2 = (T/m)*( cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi)) - (Ay/m)*y_dot + dy;
