@@ -172,10 +172,10 @@ function dX = f(t, X)
     acc = (R * TB + G - FD + d_pos) / m;
 
     % Motor speeds
-    w1 = sqrt(max(0,T/(4*k)) - tau_theta/(2*k*l) - tau_psi/(4*b));
-    w2 = sqrt(max(0,T/(4*k)) - tau_phi  /(2*k*l) + tau_psi/(4*b));
-    w3 = sqrt(max(0,T/(4*k)) + tau_theta/(2*k*l) - tau_psi/(4*b));
-    w4 = sqrt(max(0,T/(4*k)) + tau_phi  /(2*k*l) + tau_psi/(4*b));
+    w1 = sqrt(max(0,T/(4*k) - tau_theta/(2*k*l) - tau_psi/(4*b)));
+    w2 = sqrt(max(0,T/(4*k) - tau_phi  /(2*k*l) + tau_psi/(4*b)));
+    w3 = sqrt(max(0,T/(4*k) + tau_theta/(2*k*l) - tau_psi/(4*b)));
+    w4 = sqrt(max(0,T/(4*k) + tau_phi  /(2*k*l) + tau_psi/(4*b)));
 
     w_alpha = w1 - w2 + w3 - w4;
 
