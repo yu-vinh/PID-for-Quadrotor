@@ -149,9 +149,9 @@ function deq = f(t, X)
     ux = u(1); uy = u(2); uz = u(3);
 
     % Thrust and Desired Roll/Pitch
-    T = m * sqrt(ux^2 + uy^2 + (uz + g)^2); 
+    T = m*sqrt(ux^2 + uy^2 + (uz + g)^2); 
     
-    phi_d   = asin((ux*sin(psi_d) - uy*cos(psi_d)) / sqrt(ux^2 + uy^2 + (uz + g)^2));
+    phi_d = asin((ux*sin(psi_d) - uy*cos(psi_d)) / sqrt(ux^2 + uy^2 + (uz + g)^2));
 
     theta_d = atan((ux*cos(psi_d) + uy*sin(psi_d)) / (uz + g));
 
@@ -208,12 +208,5 @@ function deq = f(t, X)
     deq(10) = phi_dot2;
     deq(11) = theta_dot2;
     deq(12) = psi_dot2;
-end
-
-%% =========================================================================
-%% HELPER FUNCTION
-%% =========================================================================
-function y = sat(u, a, b)
-    y = min(max(u, a), b);
 end
 end
