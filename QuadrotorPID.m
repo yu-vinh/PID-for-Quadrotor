@@ -178,16 +178,17 @@ function deq = f(t, X)
     w_alpha = w1 - w2 + w3 - w4;
 
     %% Derivative equations of attitudes
-    phi_dot2 = (tau_phi + (Iyy - Izz)*theta_dot*psi_dot + Ir*w_alpha*theta_dot + dphi)/Ixx;
 
-    theta_dot2 = (tau_theta + (Izz - Ixx)*phi_dot*psi_dot - Ir*w_alpha*phi_dot + dtheta)/Iyy;
+    phi_dot2 = theta_dot*psi_dot*(Iyy - Izz)/Ixx - theta_dot*w_alpha*Ir/Ixx + tau_phi/Ixx + dphi;
 
-    psi_dot2 = (tau_psi + (Ixx - Iyy)*phi_dot*theta_dot + dpsi)/Izz;
+    theta_dot2 = phi_dot*psi_dot*(Izz - Ixx)/Iyy + phi_dot*w_alpha*Ir/Iyy + tau_theta/Iyy + dtheta;
 
+    psi_dot2 = phi_dot*theta_dot*(Ixx - Iyy)/Izz + tau_psi/Izz + dpsi;
     %% Derivative equations of positions
-    x_dot2 = (T/m)*( cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi)) - (Ax/m)*x_dot + dx;
 
-    y_dot2 = (T/m)*( cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi)) - (Ay/m)*y_dot + dy;
+    x_dot2 = (T/m)*(cos(phi)*sin(theta)*cos(psi) + sin(phi)*sin(psi)) - (Ax/m)*x_dot + dx;
+
+    y_dot2 = (T/m)*(cos(phi)*sin(theta)*sin(psi) - sin(phi)*cos(psi)) - (Ay/m)*y_dot + dy;
 
     z_dot2 = (T/m)*cos(phi)*cos(theta) - g - (Az/m)*z_dot + dz;
 
